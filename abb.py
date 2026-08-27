@@ -249,7 +249,16 @@ class ArbolBinarioBusqueda:
             resultado.append(nodo.get_dato())
             self._preorden(nodo.get_izquierda(), resultado)
             self._preorden(nodo.get_derecha(), resultado)
-
+    def _preordeniterativo(self,nodo,resultado):
+        if nodo is not None:
+            stack = [nodo]
+            while stack:
+                current = stack.pop()
+                resultado.append(current.get_dato())
+                if current.get_derecha() is not None:
+                    stack.append(current.get_derecha())
+                if current.get_izquierda() is not None:
+                    stack.append(current.get_izquierda())
     def postorden(self):
         """Realiza el recorrido postorden (Izquierda -> Derecha -> Raíz).
 
@@ -266,7 +275,22 @@ class ArbolBinarioBusqueda:
             self._postorden(nodo.get_izquierda(), resultado)
             self._postorden(nodo.get_derecha(), resultado)
             resultado.append(nodo.get_dato())
-
+    def _postordeniterativo(self,nodo,resultado):
+        if nodo is not None:
+            stack = []
+            last_visited = None
+            current = nodo
+            while stack or current:
+                if current:
+                    stack.append(current)
+                    current = current.get_izquierda()
+                else:
+                    peek_node = stack[-1]
+                    if peek_node.get_derecha() and last_visited != peek_node.get_derecha():
+                        current = peek_node.get_derecha()
+                    else:
+                        resultado.append(peek_node.get_dato())
+                        last_visited = stack.pop()
     def por_niveles(self):
         """Recorrido por niveles (BFS) usando una lista como cola."""
         if self.esta_vacio():
