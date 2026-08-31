@@ -45,6 +45,10 @@ class Nodo:
         """Establece el hijo derecho del nodo."""
         self._derecha = derecha
 
+    def es_hoja(self):
+        """Retorna True si el nodo es una hoja (no tiene hijos)."""
+        return self._izquierda is None and self._derecha is None
+
 
 class ArbolBinarioBusqueda:
     """Clase que representa un Árbol Binario de Búsqueda (ABB)."""
@@ -70,7 +74,7 @@ class ArbolBinarioBusqueda:
         """Retorna True si el árbol no tiene nodos."""
         return self._raiz is None
 
-    def __len__(self):
+    def cantidad(self):
         """Retorna la cantidad total de nodos en el árbol."""
         return self._tamanio
 
@@ -291,8 +295,8 @@ class ArbolBinarioBusqueda:
                     else:
                         resultado.append(peek_node.get_dato())
                         last_visited = stack.pop()
-    def por_niveles(self):
-        """Recorrido por niveles (BFS) usando una lista como cola."""
+    def amplitud(self):
+        """Recorrido por niveles (Amplitud/BFS) usando una lista como cola."""
         if self.esta_vacio():
             return []
 
@@ -308,6 +312,94 @@ class ArbolBinarioBusqueda:
                 cola.append(nodo.get_derecha())
 
         return resultado
+    def infija(self):
+        """Retorna e imprime la expresión en su forma infija (inorden)."""
+        elementos = self.inorden()
+        exp_str = " ".join(str(e) for e in elementos)
+        print(f"Forma Infija: {exp_str}")
+        return exp_str
+
+    def postfija(self):
+        """Retorna e imprime la expresión en su forma postfija (postorden)."""
+        elementos = self.postorden()
+        exp_str = " ".join(str(e) for e in elementos)
+        print(f"Forma Postfija: {exp_str}")
+        return exp_str
+
+    # --- Árbol de Expresiones Matemáticas ---
+
+    def _infija_a_postfija(self, expresion):
+        """Convierte una expresión infija a una lista de tokens postfija (Shunting-Yard)."""
+        precedencia = {'+': 1, '-': 1, '*': 2, '/': 2}
+        salida, pila_op = [], []
+        for token in expresion.split():
+            if token in precedencia:
+                while (pila_op and pila_op[-1] in precedencia and
+                       precedencia[pila_op[-1]] >= precedencia[token]):
+                    salida.append(pila_op.pop())
+                pila_op.append(token)
+            else:
+                salida.append(token)
+        return salida + pila_op[::-1]
+
+    def _postfija_a_arbol(self, tokens):
+        """Construye la estructura de árbol a partir de una lista de tokens en postfija."""
+        operadores = {'+', '-', '*', '/'}
+        pila = []
+        for token in tokens:
+            nodo = Nodo(token)
+            if token in operadores:
+                nodo.set_derecha(pila.pop())
+                nodo.set_izquierda(pila.pop())
+            pila.append(nodo)
+        return pila[-1] if pila else None
+
+    def _insertar_expresion(self, expresion):
+        """Construye un árbol de expresión matemática a partir de una cadena infija."""
+        tokens_postfija = self._infija_a_postfija(expresion)
+        self._raiz = self._postfija_a_arbol(tokens_postfija)
+        self._tamanio = len(expresion.split())
+
+    def insertarexpresion(self, expresion):
+        """Alias para insertar_expresion."""
+        self._insertar_expresion(expresion)
+
+    def result_expresion(self):
+        """Evalúa la expresión matemática del árbol y muestra la resolución directamente."""
+        if self.esta_vacio():
+            print("El árbol está vacío.")
+            return None
+
+        resultado = self._evaluar_nodo(self._raiz)
+        if isinstance(resultado, float) and resultado.is_integer():
+            resultado = int(resultado)
+        print(f"Resultado de la expresión: {resultado}")
+        return resultado
+
+    def _evaluar_nodo(self, nodo):
+        """Método auxiliar recursivo para evaluar un nodo del 
+        árbol de expresión."""
+        if nodo is None:
+            return 0
+        if nodo.es_hoja():
+            val_str = str(nodo.get_dato())
+            if '.' in val_str:
+                return float(val_str)
+            return int(val_str)
+        val_izq = self._evaluar_nodo(nodo.get_izquierda())
+        val_der = self._evaluar_nodo(nodo.get_derecha())
+        op = nodo.get_dato()
+
+        if op == '+':
+            return val_izq + val_der
+        elif op == '-':
+            return val_izq - val_der
+        elif op == '*':
+            return val_izq * val_der
+        elif op == '/':
+            return val_izq / val_der
+        else:
+            raise ValueError(f"Operador no soportado: {op}")
 
     # --- Visualización ---
 
@@ -325,29 +417,45 @@ class ArbolBinarioBusqueda:
 
 def main():
     """Función principal de demostración."""
+    print("--- Demostración Árbol Binario de Búsqueda ---")
     arbol = ArbolBinarioBusqueda()
-    elementos = [100,50,25,55,150,120,160]
-
+    elementos = [100, 50, 25, 55, 150, 120, 160, 40]
+    print(f"Elementos insertados: {elementos}")
     for el in elementos:
         arbol.insertar(el)
 
-    print("--- Demostración Árbol Binario de Búsqueda ---")
     print("¿Está vacío?:", arbol.esta_vacio())
-    print("Número de nodos (len):", len(arbol))
+    print("Número de nodos (cantidad):", arbol.cantidad())
     print("Mínimo:", arbol.minimo())
     print("Máximo:", arbol.maximo())
     print("Altura del árbol:", arbol.altura())
     print("Recorrido Inorden:    ", arbol.inorden())
     print("Recorrido Preorden:   ", arbol.preorden())
     print("Recorrido Postorden:  ", arbol.postorden())
-    print("Recorrido Por Niveles:", arbol.por_niveles())
-    print("elemento borrado", arbol.borrar(40))
+    print("Recorrido en Amplitud:", arbol.amplitud())
+    print("Elemento borrado:", arbol.borrar(40))
     print("Representación visual del árbol:")
     arbol.imprimir()
+
+    print("\n" + "=" * 50)
+    print("--- Demostración Árbol de Expresión Matemática ---")
+    print("=" * 50)
+
+    arbol_exp = ArbolBinarioBusqueda()
+    expresion = "3 + 5 * 2"
+    print(f"Expresión ingresada: '{expresion}'")
+
+    arbol_exp.insertarexpresion(expresion)
+
+    print("\nRepresentación visual del árbol de expresión:")
+    arbol_exp.imprimir()
+
+    print()
+    arbol_exp.infija()
+    arbol_exp.postfija()
+
+    arbol_exp.result_expresion()
 
 
 if __name__ == "__main__":
     main()
-
-
-
