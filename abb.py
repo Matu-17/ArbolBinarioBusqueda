@@ -131,7 +131,42 @@ class ArbolBinarioBusqueda:
             return self._buscar(dato, nodo.get_izquierda())
         if dato > nodo.get_dato() and nodo.get_derecha() is not None:
             return self._buscar(dato, nodo.get_derecha())
+    def es_hoja(self, dato):
+        """Verifica si el nodo que contiene el dato especificado es una hoja.
+
+        Args:
+            dato: El valor del nodo a consultar.
+
+        Returns:
+            bool: True si el nodo existe y no tiene hijos, False en caso contrario.
+        """
+        nodo = self._buscar_nodo(dato, self._raiz)
+        if nodo is not None:
+            return nodo.es_hoja()
         return False
+
+    def _buscar_nodo(self, dato, nodo):
+        """Método auxiliar recursivo que retorna el objeto Nodo correspondiente al dato."""
+        if nodo is None:
+            return None
+        if str(dato) == str(nodo.get_dato()):
+            return nodo
+        if self._es_comparable(dato, nodo.get_dato()):
+            if dato < nodo.get_dato():
+                return self._buscar_nodo(dato, nodo.get_izquierda())
+            return self._buscar_nodo(dato, nodo.get_derecha())
+        # Búsqueda general no ordenada (para árboles de expresión)
+        izq = self._buscar_nodo(dato, nodo.get_izquierda())
+        if izq is not None:
+            return izq
+        return self._buscar_nodo(dato, nodo.get_derecha())
+
+    def _es_comparable(self, a, b):
+        """Retorna True si dos elementos se pueden comparar por orden de magnitud (<, >)."""
+        try:
+            return (isinstance(a, (int, float)) and isinstance(b, (int, float))) or (type(a) == type(b))
+        except TypeError:
+            return False
 
     # --- Mínimo, Máximo y Altura ---
 
@@ -313,19 +348,25 @@ class ArbolBinarioBusqueda:
 
         return resultado
     def infija(self):
-        """Retorna e imprime la expresión en su forma infija (inorden)."""
+        """Retorna e imprime la expresión en su forma infija (inorden)"""
         elementos = self.inorden()
         exp_str = " ".join(str(e) for e in elementos)
         print(f"Forma Infija: {exp_str}")
         return exp_str
 
     def postfija(self):
-        """Retorna e imprime la expresión en su forma postfija (postorden)."""
+        """Retorna e imprime la expresión en su forma postfija (postorden)"""
         elementos = self.postorden()
         exp_str = " ".join(str(e) for e in elementos)
         print(f"Forma Postfija: {exp_str}")
         return exp_str
-
+    def prefija(self):
+        """Retorna e imprime la expresion en su forma prefija"""
+        elementos = self.preorden()
+        exp_str = " ".join(str(e) for e in elementos)
+        print(f"Forma Prefija: {exp_str}")
+        return exp_str
+        
     # --- Árbol de Expresiones Matemáticas ---
 
     def _infija_a_postfija(self, expresion):
@@ -435,6 +476,7 @@ def main():
     print("Recorrido en Amplitud:", arbol.amplitud())
     print("Elemento borrado:", arbol.borrar(40))
     print("Representación visual del árbol:")
+    print("Es hoja?:", arbol.es_hoja(100))
     arbol.imprimir()
 
     print("\n" + "=" * 50)
@@ -453,7 +495,7 @@ def main():
     print()
     arbol_exp.infija()
     arbol_exp.postfija()
-
+    arbol_exp.prefija()
     arbol_exp.result_expresion()
 
 
